@@ -9,7 +9,7 @@ import {
   CogIcon,
 } from "@heroicons/react/outline";
 
-const Sidebar = () => {
+const Sidebar = ({ onLinkClick }) => {
   const location = useLocation();
 
   const menuItems = [
@@ -21,17 +21,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="bg-white h-full shadow-md w-64 flex flex-col">
-      {/* Logo */}
-      <div className="p-4 border-b">
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-            <span className="text-white font-bold text-lg">RS</span>
-          </div>
-          <span className="text-primary font-bold text-xl">ReforçoSaber</span>
-        </Link>
-      </div>
-
+    <div className="bg-white h-full w-64 flex flex-col">
       {/* Menu Principal */}
       <div className="flex-1 py-6 px-3 space-y-1">
         {menuItems.map((item) => {
@@ -42,10 +32,11 @@ const Sidebar = () => {
             <Link
               key={item.path}
               to={item.path}
+              onClick={onLinkClick}
               className={`flex items-center space-x-3 px-3 py-2.5 rounded-md transition-colors ${
                 isActive
                   ? "bg-primary text-white"
-                  : "text-gray-600 hover:bg-gray-100"
+                  : "text-tertiary hover:bg-gray-100"
               }`}
             >
               <Icon className="w-5 h-5" />
@@ -59,10 +50,11 @@ const Sidebar = () => {
       <div className="border-t p-4">
         <Link
           to="/perfil"
+          onClick={onLinkClick}
           className={`flex items-center space-x-3 px-3 py-2.5 rounded-md transition-colors ${
             location.pathname === "/perfil"
               ? "bg-primary text-white"
-              : "text-gray-600 hover:bg-gray-100"
+              : "text-tertiary hover:bg-gray-100"
           }`}
         >
           <CogIcon className="w-5 h-5" />
