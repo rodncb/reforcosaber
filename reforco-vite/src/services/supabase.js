@@ -1,20 +1,22 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Hardcoded para diagnóstico
-const supabaseUrl = "https://wmorozzczawgbgzvpaby.supabase.co";
-const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indtb3JvenpjemF3Z2JnenZwYWJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI2NjMwNDksImV4cCI6MjA1ODIzOTA0OX0.p-z9fe2VGNVAJquRKWSydUWvzm_xFCzb3tREI0T9Zag";
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Log para depuração detalhada
-console.log("URL do Supabase (hardcoded):", supabaseUrl);
-console.log(
-  "Chave Anon (hardcoded):",
-  supabaseAnonKey.substring(0, 20) + "..."
-);
+// Inicializa o cliente Supabase
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Inicialização do cliente Supabase
-console.log("Inicializando cliente Supabase com URL e chave hardcoded");
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Tenta obter o usuário autenticado
+const getUser = async () => {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return user;
+  } catch (error) {
+    return null;
+  }
+};
 
 // Funções de autenticação
 export const authService = {
@@ -99,4 +101,4 @@ export const authService = {
 };
 
 // Exportar para uso em toda a aplicação
-export default supabase;
+export { supabase, getUser };
