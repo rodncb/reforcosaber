@@ -13,7 +13,7 @@ const getUser = async () => {
       data: { user },
     } = await supabase.auth.getUser();
     return user;
-  } catch (error) {
+  } catch (_) {
     return null;
   }
 };
@@ -22,23 +22,15 @@ const getUser = async () => {
 export const authService = {
   // Login com email e senha
   signIn: async (email, password) => {
-    console.log("Tentando login com:", email);
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (error) {
-        console.error("Erro de login:", error.message, error);
-        throw error;
-      }
-      console.log("Login bem-sucedido:", data);
-      return data;
-    } catch (err) {
-      console.error("Exceção durante login:", err);
-      throw err;
+    if (error) {
+      throw error;
     }
+    return data;
   },
 
   // Cadastro com email e senha
@@ -68,19 +60,15 @@ export const authService = {
 
       // Se o erro for AuthSessionMissingError, significa que não há usuário logado
       if (error && error.name === "AuthSessionMissingError") {
-        console.log("Nenhum usuário autenticado");
         return null;
       }
 
       if (error) {
-        console.error("Erro ao obter usuário:", error.message);
         throw error;
       }
 
-      console.log("Usuário atual:", data?.user);
       return data?.user;
     } catch (err) {
-      console.error("Exceção ao obter usuário:", err);
       // Trata a exceção específica de sessão ausente
       if (err.message && err.message.includes("Auth session missing")) {
         return null;
