@@ -29,17 +29,13 @@ jobs:
         with:
           node-version: 18
           cache: "npm"
-          cache-dependency-path: "./reforco-vite/package-lock.json"
+          cache-dependency-path: "package-lock.json"
 
       - name: Install dependencies
-        run: |
-          cd reforco-vite
-          npm ci
+        run: npm ci
 
       - name: Build
-        run: |
-          cd reforco-vite
-          npm run build
+        run: npm run build
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
@@ -50,7 +46,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./reforco-vite/dist"
+          path: "dist"
 
       - name: Deploy to GitHub Pages
         id: deployment
