@@ -41,4 +41,11 @@ lerna-debug.log*
 .temp
 
 # Versão antiga do projeto
-reforco-do-saber/ 
+reforco-do-saber/
+
+# Arquivos duplicados na raiz
+/src/
+/package.json
+/package-lock.json
+/postcss.config.js
+/tailwind.config.js 
