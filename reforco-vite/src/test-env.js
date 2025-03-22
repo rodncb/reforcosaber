@@ -4,6 +4,7 @@ console.log("URL do Supabase:", import.meta.env.VITE_SUPABASE_URL);
 console.log("Chave ANON:", import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 // Verificar se há caracteres problemáticos
+const url = import.meta.env.VITE_SUPABASE_URL || "";
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 console.log("Comprimento da chave:", anonKey.length);
 console.log(
@@ -21,4 +22,4 @@ console.log("Tem espaços?", temEspacos);
 console.log("Formato da chave corrigida:", anonKey.replace(/[\r\n\s]/g, ""));
 console.log("======== FIM DO TESTE ========");
 
-export default {};
+export { url, anonKey };
