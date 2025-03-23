@@ -21,15 +21,10 @@ export const AuthProvider = ({ children }) => {
   // Verifica o usuário ao carregar a aplicação
   useEffect(() => {
     const checkUser = async () => {
-      try {
-        const user = await authService.getCurrentUser();
-        setUser(user);
-      } catch (error) {
-        console.error("Erro ao verificar usuário:", error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
+      // Tentativa de obter o usuário atual - retorna null se não houver
+      const currentUser = await authService.getCurrentUser();
+      setUser(currentUser);
+      setLoading(false);
     };
 
     checkUser();
@@ -55,28 +50,14 @@ export const AuthProvider = ({ children }) => {
   const signIn = async (email, password) => {
     setLoading(true);
     try {
-      console.log("Tentando fazer login...");
-      console.log(
-        "URL do Supabase (inicial):",
-        import.meta.env.VITE_SUPABASE_URL?.substring(0, 10) + "..."
-      );
-
       const { user, error } = await authService.signIn(email, password);
 
       if (error) {
-        console.error("Erro de autenticação:", error);
         throw error;
       }
 
-      console.log(
-        "Login realizado com sucesso:",
-        user ? "Usuário autenticado" : "Usuário não encontrado"
-      );
       setUser(user);
       return user;
-    } catch (error) {
-      console.error("Erro completo:", error);
-      throw error;
     } finally {
       setLoading(false);
     }

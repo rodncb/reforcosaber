@@ -14,8 +14,8 @@ const TopBar = ({ toggleSidebar }) => {
   const handleLogout = async () => {
     try {
       await signOut();
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
+    } catch {
+      // Erro tratado silenciosamente
     }
   };
 

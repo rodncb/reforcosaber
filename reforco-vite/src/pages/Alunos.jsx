@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
+import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/outline";
 
 const Alunos = () => {
   const [alunos, setAlunos] = useState([]);
@@ -7,6 +8,7 @@ const Alunos = () => {
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [alunoEditando, setAlunoEditando] = useState(null);
+  const [erro, setErro] = useState(null);
   const [formData, setFormData] = useState({
     nome: "",
     dataNascimento: "",
@@ -53,7 +55,9 @@ const Alunos = () => {
 
   const fetchAlunos = async () => {
     try {
+      setErro(null);
       setLoading(true);
+
       const { data, error } = await supabase
         .from("alunos")
         .select("*")
@@ -67,7 +71,7 @@ const Alunos = () => {
         setAlunos(data);
       }
     } catch (error) {
-      console.error("Erro ao buscar alunos:", error.message);
+      setErro(`Erro ao buscar alunos: ${error.message}`);
       // Usar dados fictícios em caso de erro
       setAlunos([
         {
@@ -176,6 +180,7 @@ const Alunos = () => {
   // Enviar formulário para criar novo aluno
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErro(null);
 
     try {
       setLoading(true);
@@ -207,7 +212,7 @@ const Alunos = () => {
       // Fechando o modal e resetando o formulário
       handleCloseModal();
     } catch (error) {
-      console.error("Erro ao cadastrar aluno:", error.message);
+      setErro(`Erro ao cadastrar aluno: ${error.message}`);
       alert("Erro ao cadastrar aluno. Tente novamente.");
     } finally {
       setLoading(false);
@@ -217,6 +222,7 @@ const Alunos = () => {
   // Enviar formulário para atualizar aluno
   const handleUpdate = async (e) => {
     e.preventDefault();
+    setErro(null);
 
     if (!alunoEditando) return;
 
@@ -251,7 +257,7 @@ const Alunos = () => {
       // Fechando o modal e resetando o formulário
       handleCloseModal();
     } catch (error) {
-      console.error("Erro ao atualizar aluno:", error.message);
+      setErro(`Erro ao atualizar aluno: ${error.message}`);
       alert("Erro ao atualizar aluno. Tente novamente.");
     } finally {
       setLoading(false);
@@ -261,6 +267,7 @@ const Alunos = () => {
   // Excluir aluno
   const handleExcluir = async (id) => {
     if (window.confirm("Tem certeza que deseja excluir este aluno?")) {
+      setErro(null);
       try {
         setLoading(true);
 
@@ -273,7 +280,7 @@ const Alunos = () => {
         // Atualizando a lista de alunos
         fetchAlunos();
       } catch (error) {
-        console.error("Erro ao excluir aluno:", error.message);
+        setErro(`Erro ao excluir aluno: ${error.message}`);
         alert("Erro ao excluir aluno. Tente novamente.");
       } finally {
         setLoading(false);
@@ -292,6 +299,12 @@ const Alunos = () => {
           Adicionar Aluno
         </button>
       </div>
+
+      {erro && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
+          <p>{erro}</p>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center items-center h-64">

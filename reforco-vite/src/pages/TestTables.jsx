@@ -30,7 +30,6 @@ const TestTables = () => {
         .select();
 
       if (error) {
-        console.error("Erro detalhado:", error);
         setError({
           message: error.message,
           details: error.details,
@@ -41,7 +40,6 @@ const TestTables = () => {
         setResult(data);
       }
     } catch (err) {
-      console.error("Erro na operação:", err);
       setError({ message: err.message });
     } finally {
       setLoading(false);
@@ -78,8 +76,6 @@ const TestTables = () => {
         observacoes: "Aula de teste",
       };
 
-      console.log("Tentando inserir aula:", novaAula);
-
       // Tentativa de inserção
       const { data, error } = await supabase
         .from("aulas")
@@ -87,7 +83,6 @@ const TestTables = () => {
         .select();
 
       if (error) {
-        console.error("Erro detalhado:", error);
         setError({
           message: error.message,
           details: error.details,
@@ -98,7 +93,6 @@ const TestTables = () => {
         setResult(data);
       }
     } catch (err) {
-      console.error("Erro na operação:", err);
       setError({ message: err.message });
     } finally {
       setLoading(false);
@@ -111,33 +105,24 @@ const TestTables = () => {
     setError(null);
 
     try {
-      // Usando a função de informação do Postgres para obter a estrutura da tabela
-      const { data, error } = await supabase.rpc("verificar_estrutura_tabela", {
-        nome_tabela: tabela,
-      });
+      // Tentativa de seleção de dados
+      const { data, error } = await supabase.from(tabela).select().limit(1);
 
       if (error) {
-        // Se a função RPC não existir, vamos tentar uma abordagem diferente
-        const { data: colunas, error: colunasError } = await supabase
-          .from(tabela)
-          .select("*")
-          .limit(1);
-
-        if (colunasError) {
-          throw colunasError;
-        }
-
-        const estrutura = {
-          tabela: tabela,
-          colunas: colunas.length > 0 ? Object.keys(colunas[0]) : [],
-        };
-
-        setResult(estrutura);
+        setError({
+          message: `Erro ao verificar tabela ${tabela}: ${error.message}`,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
       } else {
-        setResult(data);
+        const estrutura = data && data[0] ? Object.keys(data[0]) : [];
+        setResult({
+          message: `Estrutura da tabela ${tabela}`,
+          estrutura,
+        });
       }
     } catch (err) {
-      console.error(`Erro ao verificar tabela ${tabela}:`, err);
       setError({ message: err.message });
     } finally {
       setLoading(false);
@@ -150,57 +135,33 @@ const TestTables = () => {
     setError(null);
 
     try {
-      // Buscar todas as aulas sem usar join automático
+      // Tentativa de buscar aulas junto com dados do aluno
       const { data, error } = await supabase
         .from("aulas")
-        .select("*")
-        .order("data", { ascending: false });
+        .select(
+          `
+          *,
+          alunos (
+            nome
+          )
+        `
+        )
+        .limit(10);
 
       if (error) {
-        console.error("Erro detalhado:", error);
         setError({
-          message: error.message,
+          message: `Erro ao buscar aulas: ${error.message}`,
           details: error.details,
           hint: error.hint,
           code: error.code,
         });
-      } else if (data && data.length > 0) {
-        // Buscar informações dos alunos separadamente
-        const alunosIds = [...new Set(data.map((aula) => aula.aluno_id))];
-        const { data: alunosData, error: alunosError } = await supabase
-          .from("alunos")
-          .select("id, nome")
-          .in("id", alunosIds);
-
-        if (alunosError) {
-          console.error("Erro ao buscar informações dos alunos:", alunosError);
-          setError({
-            message: "Erro ao buscar informações dos alunos",
-            details: alunosError.details,
-            hint: alunosError.hint,
-            code: alunosError.code,
-          });
-        } else {
-          // Mapeando os nomes dos alunos para as aulas
-          const aulasComAlunos = data.map((aula) => {
-            const alunoEncontrado = alunosData?.find(
-              (aluno) => aluno.id === aula.aluno_id
-            );
-            return {
-              ...aula,
-              alunos: alunoEncontrado
-                ? { nome: alunoEncontrado.nome }
-                : { nome: "Aluno não encontrado" },
-            };
-          });
-
-          setResult(aulasComAlunos);
-        }
       } else {
-        setResult([]);
+        setResult({
+          message: `Aulas encontradas: ${data.length}`,
+          data,
+        });
       }
     } catch (err) {
-      console.error("Erro na operação:", err);
       setError({ message: err.message });
     } finally {
       setLoading(false);

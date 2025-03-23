@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { useLocation } from "react-router-dom";
+import { formatarData } from "../utils/formatters";
 
 const Aulas = () => {
   const location = useLocation();
   const [aulas, setAulas] = useState([]);
   const [alunos, setAlunos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState(null);
+  const [erro, setErro] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editando, setEditando] = useState(false);
   const [aulaEditando, setAulaEditando] = useState(null);
@@ -52,7 +53,7 @@ const Aulas = () => {
 
   const fetchAulas = async () => {
     setLoading(true);
-    setErrorMsg(null);
+    setErro(null);
 
     try {
       // Fazendo a consulta ao Supabase
@@ -74,7 +75,7 @@ const Aulas = () => {
 
       setAulas(data || []);
     } catch (err) {
-      setErrorMsg(err.message);
+      setErro(err.message);
     } finally {
       setLoading(false);
     }
@@ -82,7 +83,7 @@ const Aulas = () => {
 
   const fetchAlunos = async () => {
     setLoading(true);
-    setErrorMsg(null);
+    setErro(null);
 
     try {
       const { data, error } = await supabase
@@ -96,18 +97,9 @@ const Aulas = () => {
 
       setAlunos(data || []);
     } catch (err) {
-      setErrorMsg(err.message);
+      setErro(err.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const formatarData = (dataStr) => {
-    try {
-      const data = new Date(dataStr);
-      return data.toLocaleDateString("pt-BR");
-    } catch {
-      return dataStr;
     }
   };
 
@@ -200,13 +192,14 @@ const Aulas = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErro(null);
 
     try {
       setLoading(true);
 
-      // Preparando dados para inserção ou atualização no Supabase
+      // Formatação e preparação dos dados para o Supabase
       const dadosAula = {
-        aluno_id: formData.aluno_id,
+        aluno_id: Number(formData.aluno_id),
         data: formData.data,
         horario: formData.horario,
         duracao: formData.duracao,
@@ -215,39 +208,26 @@ const Aulas = () => {
         observacoes: formData.observacoes,
       };
 
-      let data, error;
+      let error;
 
-      if (editando && aulaEditando) {
-        // Atualizar aula existente
-        console.log("Atualizando aula ID:", aulaEditando.id, dadosAula);
-
-        const result = await supabase
+      if (aulaEditando) {
+        // Atualização de aula existente
+        const { error: updateError } = await supabase
           .from("aulas")
           .update(dadosAula)
-          .eq("id", aulaEditando.id)
-          .select();
-
-        data = result.data;
-        error = result.error;
+          .eq("id", aulaEditando.id);
+        error = updateError;
       } else {
-        // Inserir nova aula
-        console.log("Inserindo nova aula:", dadosAula);
-
-        const result = await supabase
+        // Inserção de nova aula
+        const { error: insertError } = await supabase
           .from("aulas")
-          .insert([dadosAula])
-          .select();
-
-        data = result.data;
-        error = result.error;
+          .insert([dadosAula]);
+        error = insertError;
       }
 
       if (error) {
-        console.error("Erro detalhado:", error);
         throw error;
       }
-
-      console.log("Operação realizada com sucesso:", data);
 
       // Atualizar lista de aulas
       fetchAulas();
@@ -255,7 +235,9 @@ const Aulas = () => {
       // Fechar modal e resetar formulário
       handleCloseModal();
     } catch (error) {
-      console.error("Erro ao processar aula:", error.message);
+      setErro(
+        `Erro ao ${editando ? "atualizar" : "agendar"} aula: ${error.message}`
+      );
       alert(
         `Erro ao ${editando ? "atualizar" : "agendar"} aula. Tente novamente.`
       );
@@ -266,6 +248,7 @@ const Aulas = () => {
 
   const handleExcluir = async (id) => {
     if (window.confirm("Tem certeza que deseja excluir esta aula?")) {
+      setErro(null);
       try {
         setLoading(true);
 
@@ -278,7 +261,7 @@ const Aulas = () => {
         // Atualizar lista de aulas
         fetchAulas();
       } catch (error) {
-        console.error("Erro ao excluir aula:", error.message);
+        setErro(`Erro ao excluir aula: ${error.message}`);
         alert("Erro ao excluir aula. Tente novamente.");
       } finally {
         setLoading(false);
@@ -311,9 +294,9 @@ const Aulas = () => {
         </button>
       </div>
 
-      {errorMsg && (
-        <div className="bg-red-50 text-red-500 p-4 rounded-md mb-4">
-          {errorMsg}
+      {erro && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
+          <p>{erro}</p>
         </div>
       )}
 

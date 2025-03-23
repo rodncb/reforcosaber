@@ -10,6 +10,7 @@ const Dashboard = () => {
   });
   const [aulasRecentes, setAulasRecentes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(null);
 
   useEffect(() => {
     fetchEstatisticas();
@@ -41,12 +42,7 @@ const Dashboard = () => {
         .eq("status", "Cancelada");
 
       if (erroAlunos || erroAulas || erroPendentes || erroCanceladas) {
-        console.error("Erro ao buscar estatísticas:", {
-          erroAlunos,
-          erroAulas,
-          erroPendentes,
-          erroCanceladas,
-        });
+        setErro("Erro ao buscar estatísticas.");
         return;
       }
 
@@ -56,8 +52,8 @@ const Dashboard = () => {
         aulasPendentes: aulasPendentes || 0,
         aulasCanceladas: aulasCanceladas || 0,
       });
-    } catch (error) {
-      console.error("Erro ao buscar estatísticas:", error);
+    } catch {
+      setErro("Erro ao buscar estatísticas.");
     }
   };
 
@@ -86,7 +82,7 @@ const Dashboard = () => {
         .order("horario", { ascending: true });
 
       if (error) {
-        console.error("Erro ao buscar aulas recentes:", error);
+        setErro("Erro ao buscar aulas recentes.");
         return;
       }
 
@@ -99,7 +95,7 @@ const Dashboard = () => {
           .in("id", alunosIds);
 
         if (alunosError) {
-          console.error("Erro ao buscar informações dos alunos:", alunosError);
+          setErro("Erro ao buscar informações dos alunos.");
         } else {
           // Mapeando os nomes dos alunos para as aulas
           const aulasComAlunos = data.map((aula) => {
@@ -119,8 +115,8 @@ const Dashboard = () => {
       } else {
         setAulasRecentes([]);
       }
-    } catch (error) {
-      console.error("Erro ao buscar aulas recentes:", error);
+    } catch {
+      setErro("Erro ao buscar aulas recentes.");
     } finally {
       setLoading(false);
     }
@@ -153,6 +149,12 @@ const Dashboard = () => {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+
+      {erro && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
+          <p>{erro}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-primary/20 rounded-lg shadow-md p-6">

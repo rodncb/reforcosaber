@@ -26,8 +26,7 @@ const Login = () => {
       // Chamar o método de login do contexto
       await signIn(email, password);
       // O redirecionamento acontecerá automaticamente pelo useEffect
-    } catch (error) {
-      console.error("Erro no login:", error.message);
+    } catch {
       setError("Falha na autenticação. Verifique suas credenciais.");
     } finally {
       setLoading(false);
