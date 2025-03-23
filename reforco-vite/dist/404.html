@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Reforço do Saber</title>
+    <script type="text/javascript">
+      // Função para redirecionar SPA no GitHub Pages
+      (function () {
+        // Armazena o caminho atual para ser usado após o redirecionamento
+        var pathSegments = window.location.pathname.split("/");
+        var repoName = "reforcosaber"; // Nome do repositório
+        var path = window.location.pathname;
+
+        // Obtém apenas o caminho depois do nome do repositório
+        var pathIndex = pathSegments.indexOf(repoName);
+        if (pathIndex !== -1) {
+          path = "/" + pathSegments.slice(pathIndex + 1).join("/");
+        }
+
+        // Salva a URL atual para o redirecionamento
+        sessionStorage.redirect =
+          window.location.origin +
+          "/reforcosaber/" +
+          path +
+          window.location.search +
+          window.location.hash;
+
+        // Redireciona para a página principal
+        window.location.href = window.location.origin + "/reforcosaber/";
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- Mensagem para usuários sem JavaScript habilitado -->
+    <noscript>
+      <h1>Reforço do Saber</h1>
+      <p>
+        Esta página precisa de JavaScript. Por favor, habilite o JavaScript no
+        seu navegador e tente novamente.
+      </p>
+      <p><a href="/reforcosaber/">Voltar para a página principal</a></p>
+    </noscript>
+  </body>
+</html>
