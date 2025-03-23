@@ -39,9 +39,13 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
+  // Determina o basename baseado no ambiente
+  // No GitHub Pages o caminho será /reforcosaber/
+  const basename = import.meta.env.DEV ? "/" : "/reforcosaber/";
+
   return (
     <AuthProvider>
-      <Router>
+      <Router basename={basename}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/test-supabase" element={<TestSupabase />} />

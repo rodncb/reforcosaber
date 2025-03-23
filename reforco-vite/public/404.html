@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>ReforçoSaber</title>
+    <script type="text/javascript">
+      // Redirecionamento baseado no caminho do GitHub Pages
+      // Isso resolve o problema de recarregamento de página com rotas do React Router
+      var pathSegmentsToKeep = 1;
+
+      var l = window.location;
+      l.replace(
+        l.protocol +
+          "//" +
+          l.hostname +
+          (l.port ? ":" + l.port : "") +
+          l.pathname
+            .split("/")
+            .slice(0, 1 + pathSegmentsToKeep)
+            .join("/") +
+          "/?/" +
+          l.pathname.slice(1).split("/").slice(pathSegmentsToKeep).join("/") +
+          (l.search ? "&" + l.search.slice(1) : "") +
+          l.hash
+      );
+    </script>
+  </head>
+  <body>
+    <h1>Redirecionando...</h1>
+  </body>
+</html>

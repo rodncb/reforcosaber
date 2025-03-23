@@ -9,6 +9,28 @@
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reforço do Saber - Sistema de Gestão</title>
+
+    <!-- Script para redirecionar corretamente no GitHub Pages -->
+    <script type="text/javascript">
+      // Ajuda a resolver problemas com SPA no GitHub Pages
+      (function () {
+        // Não executar o redirecionamento em ambiente de desenvolvimento
+        if (
+          window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1" ||
+          window.location.hostname.includes("192.168")
+        ) {
+          return;
+        }
+
+        // Verificar se estamos sendo redirecionados de uma rota diferente
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect !== window.location.href) {
+          history.replaceState(null, null, redirect);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
