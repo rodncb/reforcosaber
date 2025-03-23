@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
-import { saveToLocalStorage, getFromLocalStorage } from "../utils/localStorage";
 
 const Dashboard = () => {
   const [estatisticas, setEstatisticas] = useState({
@@ -12,49 +11,14 @@ const Dashboard = () => {
   const [aulasRecentes, setAulasRecentes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(null);
-  const [statusConexao, setStatusConexao] = useState("online");
 
   useEffect(() => {
     fetchEstatisticas();
     fetchAulasRecentes();
-
-    // Verifica o status da conexão a cada 30 segundos
-    const intervalId = setInterval(verificarConexao, 30000);
-
-    // Verifica o status inicial
-    verificarConexao();
-
-    // Limpar o intervalo quando o componente for desmontado
-    return () => clearInterval(intervalId);
   }, []);
-
-  // Função para verificar o status da conexão
-  const verificarConexao = async () => {
-    try {
-      // Tenta fazer uma requisição simples
-      const { error } = await supabase
-        .from("alunos")
-        .select("count", { count: "exact", head: true });
-
-      if (error) {
-        setStatusConexao("offline");
-      } else {
-        setStatusConexao("online");
-      }
-    } catch {
-      setStatusConexao("offline");
-    }
-  };
 
   const fetchEstatisticas = async () => {
     try {
-      // Verificar se há dados em cache
-      const dadosCache = getFromLocalStorage("dashboard_estatisticas", 120); // 2 horas
-
-      if (dadosCache) {
-        setEstatisticas(dadosCache);
-      }
-
       // Buscar total de alunos
       const { count: totalAlunos, error: erroAlunos } = await supabase
         .from("alunos")
@@ -82,15 +46,12 @@ const Dashboard = () => {
         return;
       }
 
-      const novasEstatisticas = {
+      setEstatisticas({
         totalAlunos: totalAlunos || 0,
         totalAulas: totalAulas || 0,
         aulasPendentes: aulasPendentes || 0,
         aulasCanceladas: aulasCanceladas || 0,
-      };
-
-      setEstatisticas(novasEstatisticas);
-      saveToLocalStorage("dashboard_estatisticas", novasEstatisticas);
+      });
     } catch {
       setErro("Erro ao buscar estatísticas.");
     }
@@ -188,24 +149,6 @@ const Dashboard = () => {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
-
-      {statusConexao === "offline" && (
-        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 rounded flex justify-between items-center">
-          <div>
-            <p className="font-bold">Modo Offline</p>
-            <p>
-              Você está visualizando dados em cache. Algumas funcionalidades
-              podem estar limitadas.
-            </p>
-          </div>
-          <button
-            onClick={verificarConexao}
-            className="px-4 py-1 rounded text-white bg-yellow-600 hover:bg-yellow-700"
-          >
-            Verificar conexão
-          </button>
-        </div>
-      )}
 
       {erro && (
         <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
