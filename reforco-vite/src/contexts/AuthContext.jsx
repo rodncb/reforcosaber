@@ -55,9 +55,28 @@ export const AuthProvider = ({ children }) => {
   const signIn = async (email, password) => {
     setLoading(true);
     try {
-      const { user } = await authService.signIn(email, password);
+      console.log("Tentando fazer login...");
+      console.log(
+        "URL do Supabase (inicial):",
+        import.meta.env.VITE_SUPABASE_URL?.substring(0, 10) + "..."
+      );
+
+      const { user, error } = await authService.signIn(email, password);
+
+      if (error) {
+        console.error("Erro de autenticação:", error);
+        throw error;
+      }
+
+      console.log(
+        "Login realizado com sucesso:",
+        user ? "Usuário autenticado" : "Usuário não encontrado"
+      );
       setUser(user);
       return user;
+    } catch (error) {
+      console.error("Erro completo:", error);
+      throw error;
     } finally {
       setLoading(false);
     }

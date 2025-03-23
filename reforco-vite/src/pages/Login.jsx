@@ -47,6 +47,16 @@ const Login = () => {
           <p className="mt-2 text-sm text-gray-600">
             Faça login para acessar o sistema
           </p>
+          {import.meta.env.DEV && (
+            <p className="mt-2 text-xs text-gray-500">
+              Ambiente: Desenvolvimento
+            </p>
+          )}
+          {!import.meta.env.DEV && (
+            <p className="mt-2 text-xs text-gray-500">
+              Ambiente: Produção (GitHub Pages)
+            </p>
+          )}
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
