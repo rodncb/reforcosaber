@@ -13,6 +13,7 @@ import Calendario from "./pages/Calendario";
 import Usuarios from "./pages/Usuarios";
 import Perfil from "./pages/Perfil";
 import Login from "./pages/Login";
+import AuthCallback from "./pages/AuthCallback";
 import TestSupabase from "./pages/TestSupabase";
 import TestTables from "./pages/TestTables";
 
@@ -48,6 +49,7 @@ function App() {
       <Router basename={basename}>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/auth-callback" element={<AuthCallback />} />
           <Route path="/test-supabase" element={<TestSupabase />} />
           <Route path="/test-tables" element={<TestTables />} />
           <Route
