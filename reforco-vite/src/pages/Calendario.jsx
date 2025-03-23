@@ -2,11 +2,6 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { useNavigate } from "react-router-dom";
 import { formatarData } from "../utils/formatters";
-import {
-  saveToLocalStorage,
-  getFromLocalStorage,
-  generateCacheKey,
-} from "../utils/localStorage";
 
 const Calendario = () => {
   const navigate = useNavigate();
@@ -14,12 +9,18 @@ const Calendario = () => {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(null);
   const [mesAtual, setMesAtual] = useState(new Date());
-  const [modoOffline, setModoOffline] = useState(false);
+  const [aulasProximas, setAulasProximas] = useState([]);
+  const [loadingProximas, setLoadingProximas] = useState(true);
 
   // Buscar aulas do Supabase
   useEffect(() => {
     fetchAulas();
   }, [mesAtual]);
+
+  // Buscar aulas dos próximos 7 dias
+  useEffect(() => {
+    fetchAulasProximas();
+  }, []);
 
   // Função para carregar as aulas do mês selecionado
   const fetchAulas = async (
@@ -29,29 +30,11 @@ const Calendario = () => {
     setLoading(true);
     setErro(null);
 
-    // Gerar chave para cache
-    const cacheKey = generateCacheKey("calendario_aulas", { mes, ano });
-
-    // Verificar se há dados em cache
-    const dadosCache = getFromLocalStorage(cacheKey, 60); // Expiração de 60 minutos
-
-    // Se estiver offline e tiver dados em cache, use-os
-    if (modoOffline && dadosCache) {
-      setAulas(dadosCache);
-      setLoading(false);
-      return;
-    }
-
     try {
       // Calculando o primeiro e último dia do mês
       const dataInicio = `${ano}-${String(mes).padStart(2, "0")}-01`;
       const ultimoDia = new Date(ano, mes, 0).getDate();
       const dataFim = `${ano}-${String(mes).padStart(2, "0")}-${ultimoDia}`;
-
-      // Se tiver dados em cache, use-os temporariamente enquanto carrega os novos dados
-      if (dadosCache) {
-        setAulas(dadosCache);
-      }
 
       // Fazendo a consulta ao Supabase
       const { data, error } = await supabase
@@ -69,37 +52,60 @@ const Calendario = () => {
         .order("data", { ascending: true });
 
       if (error) {
-        // Se tiver dados em cache, continue usando-os em modo offline
-        if (dadosCache) {
-          setModoOffline(true);
-          setErro(
-            "Usando dados offline (último acesso). Falha na conexão: " +
-              error.message
-          );
-          setAulas(dadosCache);
-        } else {
-          throw error;
-        }
-      } else {
-        // Atualiza o estado com os dados obtidos e salva no cache
-        setAulas(data || []);
-        setMesAtual(new Date(ano, mes - 1));
-        saveToLocalStorage(cacheKey, data || []);
-        setModoOffline(false);
+        throw error;
       }
+
+      // Atualiza o estado com os dados obtidos
+      setAulas(data || []);
+      setMesAtual(new Date(ano, mes - 1));
     } catch (error) {
       setErro(`Erro ao carregar aulas: ${error.message}`);
-
-      // Se tiver dados em cache, continue usando-os em modo offline
-      if (dadosCache) {
-        setModoOffline(true);
-        setAulas(dadosCache);
-        setErro("Usando dados offline (último acesso). Erro: " + error.message);
-      } else {
-        setAulas([]);
-      }
+      setAulas([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Função para buscar especificamente as aulas dos próximos 7 dias
+  const fetchAulasProximas = async () => {
+    setLoadingProximas(true);
+
+    try {
+      // Data atual
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const dataInicio = hoje.toISOString().split("T")[0];
+
+      // Data daqui a 7 dias
+      const proximaSemana = new Date(hoje);
+      proximaSemana.setDate(hoje.getDate() + 7);
+      proximaSemana.setHours(23, 59, 59, 999);
+      const dataFim = proximaSemana.toISOString().split("T")[0];
+
+      // Buscar apenas as aulas dos próximos 7 dias
+      const { data, error } = await supabase
+        .from("aulas")
+        .select(
+          `
+          *,
+          alunos (
+            nome
+          )
+        `
+        )
+        .gte("data", dataInicio)
+        .lte("data", dataFim)
+        .order("data", { ascending: true });
+
+      if (error) {
+        throw error;
+      }
+
+      setAulasProximas(data || []);
+    } catch (error) {
+      console.error("Erro ao buscar próximas aulas:", error);
+    } finally {
+      setLoadingProximas(false);
     }
   };
 
@@ -159,8 +165,8 @@ const Calendario = () => {
 
   // Função para tentar reconectar
   const tentarNovamente = () => {
-    setModoOffline(false);
     fetchAulas();
+    fetchAulasProximas();
   };
 
   return (
@@ -219,27 +225,15 @@ const Calendario = () => {
       </div>
 
       {erro && (
-        <div
-          className={`border-l-4 p-4 mb-6 rounded ${
-            modoOffline
-              ? "bg-yellow-100 border-yellow-500 text-yellow-700"
-              : "bg-red-100 border-red-500 text-red-700"
-          }`}
-        >
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-bold">
-                {modoOffline ? "Modo Offline" : "Erro de conexão"}
-              </p>
+              <p className="font-bold">Erro de conexão</p>
               <p>{erro}</p>
             </div>
             <button
               onClick={tentarNovamente}
-              className={`px-4 py-1 rounded text-white ${
-                modoOffline
-                  ? "bg-yellow-600 hover:bg-yellow-700"
-                  : "bg-red-700 hover:bg-red-800"
-              }`}
+              className="px-4 py-1 rounded text-white bg-red-700 hover:bg-red-800"
             >
               Tentar novamente
             </button>
@@ -326,39 +320,51 @@ const Calendario = () => {
 
       <div className="mt-6 bg-white rounded-lg shadow-md p-4">
         <h2 className="text-lg font-medium mb-3">Próximas Aulas</h2>
-        {loading ? (
+        {loadingProximas ? (
           <div className="flex justify-center items-center h-20">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
           </div>
-        ) : aulas.length > 0 ? (
-          <div className="space-y-2">
-            {aulas
-              .filter((aula) => new Date(aula.data) >= new Date())
-              .sort((a, b) => new Date(a.data) - new Date(b.data))
-              .slice(0, 5) // Mostrar apenas as 5 próximas
-              .map((aula) => (
-                <div
-                  key={aula.id}
-                  className="flex items-center p-2 hover:bg-gray-50 rounded-md cursor-pointer"
-                  onClick={() => navigate(`/aulas`)}
-                >
-                  <div className="w-16 text-sm text-gray-600">
-                    {formatarData(aula.data)}
-                  </div>
-                  <div className="w-16 text-sm text-gray-600">
-                    {aula.horario}
-                  </div>
-                  <div className="flex-1 font-medium">
-                    {aula.alunos?.nome || "Aluno"}
-                  </div>
-                  <div className="text-sm text-gray-600">{aula.materia}</div>
-                </div>
-              ))}
-          </div>
         ) : (
-          <p className="text-gray-500 text-center py-4">
-            Nenhuma aula agendada
-          </p>
+          <div className="space-y-2">
+            {aulasProximas.length > 0 ? (
+              aulasProximas
+                .sort((a, b) => {
+                  // Ordenar por data primeiro
+                  const dataA = new Date(a.data);
+                  const dataB = new Date(b.data);
+                  if (dataA.getTime() !== dataB.getTime()) {
+                    return dataA - dataB;
+                  }
+                  // Depois por horário
+                  return a.horario?.localeCompare(b.horario) || 0;
+                })
+                .slice(0, 5)
+                .map((aula) => (
+                  <div
+                    key={aula.id}
+                    className="flex items-center p-3 hover:bg-gray-50 rounded-md cursor-pointer border-b border-gray-100 last:border-0 transition-colors"
+                    onClick={() => navigate(`/aulas`)}
+                  >
+                    <div className="w-24 text-sm font-medium text-gray-600">
+                      {formatarData(aula.data)}
+                    </div>
+                    <div className="w-20 text-sm font-medium text-gray-600">
+                      {aula.horario}
+                    </div>
+                    <div className="flex-1 font-medium text-gray-800">
+                      {aula.alunos?.nome || "Aluno"}
+                    </div>
+                    <div className="text-sm bg-primary/10 text-primary-dark px-3 py-1 rounded-full">
+                      {aula.materia}
+                    </div>
+                  </div>
+                ))
+            ) : (
+              <p className="text-gray-500 text-center py-8">
+                Nenhuma aula agendada para os próximos 7 dias
+              </p>
+            )}
+          </div>
         )}
       </div>
     </div>
