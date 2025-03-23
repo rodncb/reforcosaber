@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { useNavigate } from "react-router-dom";
+import { formatarData } from "../utils/formatters";
+import {
+  saveToLocalStorage,
+  getFromLocalStorage,
+  generateCacheKey,
+} from "../utils/localStorage";
 
 const Calendario = () => {
   const navigate = useNavigate();
   const [aulas, setAulas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(null);
   const [mesAtual, setMesAtual] = useState(new Date());
+  const [modoOffline, setModoOffline] = useState(false);
 
   // Buscar aulas do Supabase
   useEffect(() => {
@@ -19,31 +27,80 @@ const Calendario = () => {
     ano = mesAtual.getFullYear()
   ) => {
     setLoading(true);
+    setErro(null);
 
-    // Calculando o primeiro e último dia do mês
-    const dataInicio = `${ano}-${String(mes).padStart(2, "0")}-01`;
-    const ultimoDia = new Date(ano, mes, 0).getDate();
-    const dataFim = `${ano}-${String(mes).padStart(2, "0")}-${ultimoDia}`;
+    // Gerar chave para cache
+    const cacheKey = generateCacheKey("calendario_aulas", { mes, ano });
 
-    // Fazendo a consulta ao Supabase
-    const { data, error } = await supabase
-      .from("aulas")
-      .select(
+    // Verificar se há dados em cache
+    const dadosCache = getFromLocalStorage(cacheKey, 60); // Expiração de 60 minutos
+
+    // Se estiver offline e tiver dados em cache, use-os
+    if (modoOffline && dadosCache) {
+      setAulas(dadosCache);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Calculando o primeiro e último dia do mês
+      const dataInicio = `${ano}-${String(mes).padStart(2, "0")}-01`;
+      const ultimoDia = new Date(ano, mes, 0).getDate();
+      const dataFim = `${ano}-${String(mes).padStart(2, "0")}-${ultimoDia}`;
+
+      // Se tiver dados em cache, use-os temporariamente enquanto carrega os novos dados
+      if (dadosCache) {
+        setAulas(dadosCache);
+      }
+
+      // Fazendo a consulta ao Supabase
+      const { data, error } = await supabase
+        .from("aulas")
+        .select(
+          `
+          *,
+          alunos (
+            nome
+          )
         `
-        *,
-        alunos (
-          nome
         )
-      `
-      )
-      .gte("data", dataInicio)
-      .lte("data", dataFim)
-      .order("data", { ascending: true });
+        .gte("data", dataInicio)
+        .lte("data", dataFim)
+        .order("data", { ascending: true });
 
-    // Atualiza o estado com os dados obtidos
-    setAulas(error ? [] : data || []);
-    setMesAtual(new Date(ano, mes - 1));
-    setLoading(false);
+      if (error) {
+        // Se tiver dados em cache, continue usando-os em modo offline
+        if (dadosCache) {
+          setModoOffline(true);
+          setErro(
+            "Usando dados offline (último acesso). Falha na conexão: " +
+              error.message
+          );
+          setAulas(dadosCache);
+        } else {
+          throw error;
+        }
+      } else {
+        // Atualiza o estado com os dados obtidos e salva no cache
+        setAulas(data || []);
+        setMesAtual(new Date(ano, mes - 1));
+        saveToLocalStorage(cacheKey, data || []);
+        setModoOffline(false);
+      }
+    } catch (error) {
+      setErro(`Erro ao carregar aulas: ${error.message}`);
+
+      // Se tiver dados em cache, continue usando-os em modo offline
+      if (dadosCache) {
+        setModoOffline(true);
+        setAulas(dadosCache);
+        setErro("Usando dados offline (último acesso). Erro: " + error.message);
+      } else {
+        setAulas([]);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Função para navegar para a página de aulas e abrir o modal
@@ -90,18 +147,6 @@ const Calendario = () => {
     return aulas.filter((aula) => aula.data === dataString);
   };
 
-  // Função para formatar a data para exibição
-  const formatarData = (dataStr) => {
-    try {
-      const data = new Date(dataStr);
-      return `${String(data.getDate()).padStart(2, "0")}/${String(
-        data.getMonth() + 1
-      ).padStart(2, "0")}`;
-    } catch {
-      return dataStr;
-    }
-  };
-
   // Verificar se um dia é o dia atual
   const isHoje = (dia) => {
     const hoje = new Date();
@@ -110,6 +155,12 @@ const Calendario = () => {
       mesAtual.getMonth() === hoje.getMonth() &&
       mesAtual.getFullYear() === hoje.getFullYear()
     );
+  };
+
+  // Função para tentar reconectar
+  const tentarNovamente = () => {
+    setModoOffline(false);
+    fetchAulas();
   };
 
   return (
@@ -167,7 +218,36 @@ const Calendario = () => {
         </div>
       </div>
 
-      {loading ? (
+      {erro && (
+        <div
+          className={`border-l-4 p-4 mb-6 rounded ${
+            modoOffline
+              ? "bg-yellow-100 border-yellow-500 text-yellow-700"
+              : "bg-red-100 border-red-500 text-red-700"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-bold">
+                {modoOffline ? "Modo Offline" : "Erro de conexão"}
+              </p>
+              <p>{erro}</p>
+            </div>
+            <button
+              onClick={tentarNovamente}
+              className={`px-4 py-1 rounded text-white ${
+                modoOffline
+                  ? "bg-yellow-600 hover:bg-yellow-700"
+                  : "bg-red-700 hover:bg-red-800"
+              }`}
+            >
+              Tentar novamente
+            </button>
+          </div>
+        </div>
+      )}
+
+      {loading && !aulas.length ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
