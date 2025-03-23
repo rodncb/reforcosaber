@@ -1,9 +1,0 @@
-<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Livro Turquesa -->
-  <path d="M20 30L50 20V80L20 70V30Z" fill="#00b0b5" />
-  <path d="M20 30L50 20L50 80L20 70L20 30Z" stroke="black" strokeWidth="1" />
-  
-  <!-- Livro Salmão -->
-  <path d="M55 20L85 30V70L55 80V20Z" fill="#ff8a8a" />
-  <path d="M55 20L85 30L85 70L55 80L55 20Z" stroke="black" strokeWidth="1" />
-</svg> 
