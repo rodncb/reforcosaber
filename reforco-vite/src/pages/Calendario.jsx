@@ -13,86 +13,37 @@ const Calendario = () => {
     fetchAulas();
   }, [mesAtual]);
 
-  const fetchAulas = async () => {
-    try {
-      setLoading(true);
+  // Função para carregar as aulas do mês selecionado
+  const fetchAulas = async (
+    mes = mesAtual.getMonth() + 1,
+    ano = mesAtual.getFullYear()
+  ) => {
+    setLoading(true);
 
-      // Calcula o primeiro e último dia do mês atual
-      const primeiroDia = new Date(
-        mesAtual.getFullYear(),
-        mesAtual.getMonth(),
-        1
-      );
-      const ultimoDia = new Date(
-        mesAtual.getFullYear(),
-        mesAtual.getMonth() + 1,
-        0
-      );
+    // Calculando o primeiro e último dia do mês
+    const dataInicio = `${ano}-${String(mes).padStart(2, "0")}-01`;
+    const ultimoDia = new Date(ano, mes, 0).getDate();
+    const dataFim = `${ano}-${String(mes).padStart(2, "0")}-${ultimoDia}`;
 
-      // Formata as datas para o formato ISO
-      const dataInicio = primeiroDia.toISOString().split("T")[0];
-      const dataFim = ultimoDia.toISOString().split("T")[0];
+    // Fazendo a consulta ao Supabase
+    const { data, error } = await supabase
+      .from("aulas")
+      .select(
+        `
+        *,
+        alunos (
+          nome
+        )
+      `
+      )
+      .gte("data", dataInicio)
+      .lte("data", dataFim)
+      .order("data", { ascending: true });
 
-      console.log(`Buscando aulas de ${dataInicio} até ${dataFim}`);
-
-      // Busca aulas no intervalo de datas sem usar join automático
-      const { data, error } = await supabase
-        .from("aulas")
-        .select("*")
-        .gte("data", dataInicio)
-        .lte("data", dataFim)
-        .order("data", { ascending: true });
-
-      if (error) {
-        console.error("Erro detalhado do Supabase:", error);
-        throw error;
-      }
-
-      if (data && data.length > 0) {
-        console.log(
-          `Aulas carregadas: ${data.length} registros para o mês de ${nomeMes}`
-        );
-
-        // Buscar informações dos alunos separadamente
-        const alunosIds = [...new Set(data.map((aula) => aula.aluno_id))];
-        const { data: alunosData, error: alunosError } = await supabase
-          .from("alunos")
-          .select("id, nome")
-          .in("id", alunosIds);
-
-        if (alunosError) {
-          console.error("Erro ao buscar informações dos alunos:", alunosError);
-        } else {
-          // Mapeando os nomes dos alunos para as aulas
-          const aulasComAlunos = data.map((aula) => {
-            const alunoEncontrado = alunosData?.find(
-              (aluno) => aluno.id === aula.aluno_id
-            );
-            return {
-              ...aula,
-              alunos: alunoEncontrado
-                ? { nome: alunoEncontrado.nome }
-                : { nome: "Aluno não encontrado" },
-            };
-          });
-
-          setAulas(aulasComAlunos);
-        }
-      } else {
-        console.log(`Nenhuma aula encontrada para o mês de ${nomeMes}`);
-        setAulas([]);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar aulas:", error.message);
-      // Não usar dados mockados em produção
-      setAulas([]);
-      // Exibe um alerta para o usuário
-      alert(
-        `Erro ao carregar aulas: ${error.message}. Por favor, tente novamente.`
-      );
-    } finally {
-      setLoading(false);
-    }
+    // Atualiza o estado com os dados obtidos
+    setAulas(error ? [] : data || []);
+    setMesAtual(new Date(ano, mes - 1));
+    setLoading(false);
   };
 
   // Função para navegar para a página de aulas e abrir o modal

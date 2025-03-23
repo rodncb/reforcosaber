@@ -51,82 +51,54 @@ const Aulas = () => {
   }, [location.state]);
 
   const fetchAulas = async () => {
+    setLoading(true);
+    setErrorMsg(null);
+
     try {
-      setLoading(true);
-      setErrorMsg(null);
-
-      console.log("Iniciando busca de aulas...");
-
-      // Modificando a consulta para não usar join automático que está causando o erro
+      // Fazendo a consulta ao Supabase
       const { data, error } = await supabase
         .from("aulas")
-        .select("*")
-        .order("data", { ascending: false });
+        .select(
+          `
+          *,
+          alunos (
+            nome
+          )
+        `
+        )
+        .order("data", { ascending: true });
 
       if (error) {
-        console.error("Erro detalhado do Supabase:", error);
-        setErrorMsg(`Erro ao carregar aulas: ${error.message}`);
-        return;
+        throw new Error(`Erro ao buscar aulas: ${error.message}`);
       }
 
-      if (data && data.length > 0) {
-        console.log(`Aulas carregadas: ${data.length} registros`);
-
-        // Buscar informações dos alunos separadamente
-        const alunosIds = [...new Set(data.map((aula) => aula.aluno_id))];
-        const { data: alunosData, error: alunosError } = await supabase
-          .from("alunos")
-          .select("id, nome")
-          .in("id", alunosIds);
-
-        if (alunosError) {
-          console.error("Erro ao buscar informações dos alunos:", alunosError);
-        } else {
-          // Mapeando os nomes dos alunos para as aulas
-          const aulasComAlunos = data.map((aula) => {
-            const alunoEncontrado = alunosData?.find(
-              (aluno) => aluno.id === aula.aluno_id
-            );
-            return {
-              ...aula,
-              alunos: alunoEncontrado
-                ? { nome: alunoEncontrado.nome }
-                : { nome: "Aluno não encontrado" },
-            };
-          });
-
-          setAulas(aulasComAlunos);
-        }
-      } else {
-        console.log("Nenhuma aula encontrada");
-        setAulas([]);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar aulas:", error.message);
-      setErrorMsg(`Erro ao carregar as aulas: ${error.message}`);
+      setAulas(data || []);
+    } catch (err) {
+      setErrorMsg(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   const fetchAlunos = async () => {
+    setLoading(true);
+    setErrorMsg(null);
+
     try {
       const { data, error } = await supabase
         .from("alunos")
-        .select("id, nome, materias")
-        .order("nome");
+        .select("*")
+        .order("nome", { ascending: true });
 
       if (error) {
-        console.error("Erro ao buscar alunos:", error);
-        return;
+        throw new Error(`Erro ao buscar alunos: ${error.message}`);
       }
 
-      if (data) {
-        console.log(`Alunos carregados: ${data.length} registros`);
-        setAlunos(data);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar alunos:", error.message);
+      setAlunos(data || []);
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
