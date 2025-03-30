@@ -6,7 +6,7 @@ const Dashboard = () => {
     totalAlunos: 0,
     totalAulas: 0,
     aulasPendentes: 0,
-    aulasCanceladas: 0,
+    aulasRealizadas: 0, // Alterado de aulasCanceladas para aulasRealizadas
   });
   const [aulasRecentes, setAulasRecentes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,13 +35,13 @@ const Dashboard = () => {
         .select("*", { count: "exact", head: true })
         .eq("status", "Agendada");
 
-      // Buscar aulas canceladas
-      const { count: aulasCanceladas, error: erroCanceladas } = await supabase
+      // Buscar aulas realizadas
+      const { count: aulasRealizadas, error: erroRealizadas } = await supabase
         .from("aulas")
         .select("*", { count: "exact", head: true })
-        .eq("status", "Cancelada");
+        .eq("status", "Concluída");
 
-      if (erroAlunos || erroAulas || erroPendentes || erroCanceladas) {
+      if (erroAlunos || erroAulas || erroPendentes || erroRealizadas) {
         setErro("Erro ao buscar estatísticas.");
         return;
       }
@@ -50,7 +50,7 @@ const Dashboard = () => {
         totalAlunos: totalAlunos || 0,
         totalAulas: totalAulas || 0,
         aulasPendentes: aulasPendentes || 0,
-        aulasCanceladas: aulasCanceladas || 0,
+        aulasRealizadas: aulasRealizadas || 0,
       });
     } catch {
       setErro("Erro ao buscar estatísticas.");
@@ -182,12 +182,12 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="bg-secondary-light/20 rounded-lg shadow-md p-6">
+        <div className="bg-primary/20 rounded-lg shadow-md p-6">
           <h2 className="text-lg font-semibold text-tertiary">
-            Aulas Canceladas
+            Aulas Realizadas
           </h2>
           <div className="text-3xl font-bold mt-2 text-tertiary-dark">
-            {estatisticas.aulasCanceladas}
+            {estatisticas.aulasRealizadas}
           </div>
         </div>
       </div>

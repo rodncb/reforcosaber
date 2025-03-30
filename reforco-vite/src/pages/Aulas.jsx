@@ -257,29 +257,22 @@ const Aulas = () => {
   };
 
   const handleExcluir = async (id) => {
-    if (
-      window.confirm(
-        "Tem certeza que deseja excluir esta aula? Esta ação não pode ser desfeita."
-      )
-    ) {
-      setErro(null);
-      try {
-        setLoading(true);
+    if (!window.confirm("Tem certeza que deseja excluir esta aula?")) {
+      return;
+    }
 
-        const { error } = await supabase.from("aulas").delete().eq("id", id);
+    try {
+      setLoading(true);
+      const { error } = await supabase.from("aulas").delete().eq("id", id);
 
-        if (error) {
-          throw error;
-        }
+      if (error) throw error;
 
-        // Atualizar lista de aulas
-        fetchAulas();
-      } catch (error) {
-        setErro(`Erro ao excluir aula: ${error.message}`);
-        alert("Erro ao excluir aula. Tente novamente.");
-      } finally {
-        setLoading(false);
-      }
+      fetchAulas();
+    } catch (error) {
+      setErro(`Erro ao excluir aula: ${error.message}`);
+      alert("Erro ao excluir aula. Tente novamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
