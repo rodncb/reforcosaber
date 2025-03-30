@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
+import { saveToLocalStorage, getFromLocalStorage } from "../utils/localStorage";
+
+const CHAT_STORAGE_KEY = "teacher_assistant_chat";
 
 const ActionBadge = ({ type, priority }) => {
   const colors = {
@@ -29,6 +32,21 @@ const TeacherAssistant = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Carregar mensagens do localStorage quando o componente montar
+  useEffect(() => {
+    const savedMessages = getFromLocalStorage(CHAT_STORAGE_KEY);
+    if (savedMessages) {
+      setMessages(savedMessages);
+    }
+  }, []);
+
+  // Salvar mensagens no localStorage sempre que houver mudanças
+  useEffect(() => {
+    if (messages.length > 0) {
+      saveToLocalStorage(CHAT_STORAGE_KEY, messages);
+    }
+  }, [messages]);
+
   const handleSendMessage = async () => {
     if (!input.trim()) return;
 
@@ -49,6 +67,12 @@ const TeacherAssistant = () => {
         .order("data", { ascending: false })
         .limit(5);
 
+      // Preparar histórico de mensagens (últimas 10 mensagens)
+      const messageHistory = messages.slice(-10).map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+
       // Chamada para a Edge Function do Supabase
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/teacher-assistant`,
@@ -64,6 +88,7 @@ const TeacherAssistant = () => {
               alunos: alunosContext,
               aulas: aulasContext,
             },
+            messageHistory,
           }),
         }
       );
@@ -87,8 +112,14 @@ const TeacherAssistant = () => {
     }
   };
 
+  // Adicione uma função para limpar o histórico
+  const handleClearChat = () => {
+    setMessages([]);
+    removeFromLocalStorage(CHAT_STORAGE_KEY);
+  };
+
   return (
-    <div className="flex flex-col h-[600px] bg-white rounded-lg shadow-lg">
+    <div className="flex flex-col h-full">
       <div className="p-4 border-b">
         <h2 className="text-lg font-semibold">Assistente do Professor</h2>
       </div>
@@ -140,6 +171,18 @@ const TeacherAssistant = () => {
           </div>
         ))}
       </div>
+
+      {/* Adicione um botão para limpar o chat */}
+      {messages.length > 0 && (
+        <div className="px-4 pb-2">
+          <button
+            onClick={handleClearChat}
+            className="text-sm text-gray-500 hover:text-red-500"
+          >
+            Limpar conversa
+          </button>
+        </div>
+      )}
 
       <div className="p-4 border-t">
         <div className="flex space-x-2">
