@@ -205,8 +205,14 @@ const Aulas = () => {
       }
 
       // Formatação e preparação dos dados para o Supabase
+      // Forçando a conversão para número inteiro e verificando sua validade
+      const alunoId = parseInt(formData.aluno_id, 10);
+      if (isNaN(alunoId) || alunoId <= 0) {
+        throw new Error(`ID do aluno inválido: ${formData.aluno_id}`);
+      }
+
       const dadosAula = {
-        aluno_id: Number(formData.aluno_id),
+        aluno_id: alunoId,
         data: formData.data,
         horario: formData.horario,
         duracao: formData.duracao,
@@ -214,8 +220,6 @@ const Aulas = () => {
         status: formData.status,
         observacoes: formData.observacoes,
       };
-
-      console.log("Dados a serem enviados:", dadosAula);
 
       if (aulaEditando) {
         // Atualização de aula existente
@@ -228,8 +232,8 @@ const Aulas = () => {
           throw error;
         }
       } else {
-        // Inserção de nova aula
-        const { error } = await supabase.from("aulas").insert([dadosAula]);
+        // Inserção de nova aula - usando single object em vez de array
+        const { error } = await supabase.from("aulas").insert(dadosAula);
 
         if (error) {
           throw error;
@@ -242,7 +246,6 @@ const Aulas = () => {
       // Fechar modal e resetar formulário
       handleCloseModal();
     } catch (error) {
-      console.error("Erro completo:", error);
       setErro(
         `Erro ao ${editando ? "atualizar" : "agendar"} aula: ${error.message}`
       );

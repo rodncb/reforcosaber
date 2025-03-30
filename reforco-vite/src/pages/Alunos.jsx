@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/outline";
+import { useNavigate } from "react-router-dom";
 
 const Alunos = () => {
+  const navigate = useNavigate();
   const [alunos, setAlunos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -291,11 +293,20 @@ const Alunos = () => {
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Alunos</h1>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate("/")}
+            className="bg-gray-100 text-gray-600 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
+          >
+            Voltar
+          </button>
+          <h1 className="text-2xl font-bold">Alunos</h1>
+        </div>
         <button
-          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors"
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors flex items-center gap-2"
           onClick={() => setShowModal(true)}
         >
+          <PlusIcon className="h-5 w-5" />
           Adicionar Aluno
         </button>
       </div>
@@ -312,65 +323,111 @@ const Alunos = () => {
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nome
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Série
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Matéria
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Próxima Aula
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {alunos.map((aluno) => (
-                <tr key={aluno.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {aluno.nome}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{aluno.serie}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {aluno.materia || aluno.materias}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {aluno.proxima_aula || "Não agendada"}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <button
-                      className="bg-primary text-white px-3 py-1 rounded-md hover:bg-primary-dark transition-colors"
-                      onClick={() => handleOpenEditModal(aluno)}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="bg-secondary text-white px-3 py-1 rounded-md hover:bg-secondary-dark transition-colors"
-                      onClick={() => handleExcluir(aluno.id)}
-                    >
-                      Excluir
-                    </button>
-                  </td>
+          {/* Tabela para telas maiores */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nome
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Série
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Matéria
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Próxima Aula
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ações
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {alunos.map((aluno) => (
+                  <tr key={aluno.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {aluno.nome}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">{aluno.serie}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">
+                        {aluno.materia || aluno.materias}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">
+                        {aluno.proxima_aula || "Não agendada"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                      <button
+                        className="bg-primary text-white px-3 py-1 rounded-md hover:bg-primary-dark transition-colors"
+                        onClick={() => handleOpenEditModal(aluno)}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        className="bg-secondary text-white px-3 py-1 rounded-md hover:bg-secondary-dark transition-colors"
+                        onClick={() => handleExcluir(aluno.id)}
+                      >
+                        Excluir
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Cards para telas menores (mobile e tablet) */}
+          <div className="md:hidden">
+            {alunos.length > 0 ? (
+              <div className="divide-y divide-gray-200">
+                {alunos.map((aluno) => (
+                  <div key={aluno.id} className="p-4 space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">
+                          {aluno.nome}
+                        </h3>
+                        <p className="text-sm text-gray-500">{aluno.serie}</p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleOpenEditModal(aluno)}
+                          className="text-white bg-primary p-2 rounded-md hover:bg-primary-dark transition-colors"
+                        >
+                          <PencilIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => handleExcluir(aluno.id)}
+                          className="text-white bg-secondary p-2 rounded-md hover:bg-secondary-dark transition-colors"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <p>Matérias: {aluno.materias}</p>
+                      <p>Email: {aluno.email}</p>
+                      <p>Telefone: {aluno.telefone}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="p-4 text-center text-gray-500">
+                Nenhum aluno encontrado
+              </p>
+            )}
+          </div>
         </div>
       )}
 
