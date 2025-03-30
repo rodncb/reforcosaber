@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   HomeIcon,
@@ -7,10 +7,39 @@ import {
   AcademicCapIcon,
   UserIcon,
   CogIcon,
+  UserCircleIcon,
 } from "@heroicons/react/outline";
+import { authService } from "../services/supabase";
 
 const Sidebar = ({ onLinkClick }) => {
   const location = useLocation();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function getUserProfile() {
+      setLoading(true);
+      try {
+        const currentUser = await authService.getCurrentUser();
+        if (currentUser) {
+          setUser({
+            id: currentUser.id,
+            email: currentUser.email,
+            nome:
+              currentUser.user_metadata?.nome ||
+              currentUser.email.split("@")[0],
+            cargo: currentUser.user_metadata?.cargo || "Usuário",
+          });
+        }
+      } catch (error) {
+        console.error("Erro ao buscar usuário:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    getUserProfile();
+  }, []);
 
   const menuItems = [
     { path: "/", name: "Dashboard", icon: HomeIcon },
@@ -62,14 +91,16 @@ const Sidebar = ({ onLinkClick }) => {
         </Link>
 
         <div className="mt-4 flex items-center space-x-3 px-3">
-          <img
-            src="https://i.pravatar.cc/150?img=8"
-            alt="Avatar"
-            className="w-8 h-8 rounded-full object-cover"
-          />
+          <UserCircleIcon className="w-8 h-8 text-gray-500" />
           <div>
-            <p className="text-sm font-medium">João Professor</p>
-            <p className="text-xs text-gray-500">Professor</p>
+            {loading ? (
+              <p className="text-sm text-gray-500">Carregando...</p>
+            ) : (
+              <>
+                <p className="text-sm font-medium">{user?.nome || "Usuário"}</p>
+                <p className="text-xs text-gray-500">{user?.cargo}</p>
+              </>
+            )}
           </div>
         </div>
       </div>
