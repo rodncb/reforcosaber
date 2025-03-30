@@ -204,13 +204,16 @@ const Aulas = () => {
         throw new Error("Por favor, selecione um aluno");
       }
 
-      // Formatação e preparação dos dados para o Supabase
-      // Forçando a conversão para número inteiro e verificando sua validade
+      // Garantir que aluno_id seja um número válido
       const alunoId = parseInt(formData.aluno_id, 10);
+
       if (isNaN(alunoId) || alunoId <= 0) {
-        throw new Error(`ID do aluno inválido: ${formData.aluno_id}`);
+        throw new Error(
+          "ID do aluno inválido. Por favor, selecione um aluno válido."
+        );
       }
 
+      // Montar objeto com dados da aula
       const dadosAula = {
         aluno_id: alunoId,
         data: formData.data,
@@ -218,26 +221,25 @@ const Aulas = () => {
         duracao: formData.duracao,
         materia: formData.materia,
         status: formData.status,
-        observacoes: formData.observacoes,
+        observacoes: formData.observacoes || "",
       };
 
+      // Operação no Supabase
+      let resultado;
+
       if (aulaEditando) {
-        // Atualização de aula existente
-        const { error } = await supabase
+        // Edição de aula existente
+        resultado = await supabase
           .from("aulas")
           .update(dadosAula)
           .eq("id", aulaEditando.id);
-
-        if (error) {
-          throw error;
-        }
       } else {
-        // Inserção de nova aula - usando single object em vez de array
-        const { error } = await supabase.from("aulas").insert(dadosAula);
+        // Inserção de nova aula
+        resultado = await supabase.from("aulas").insert(dadosAula);
+      }
 
-        if (error) {
-          throw error;
-        }
+      if (resultado.error) {
+        throw resultado.error;
       }
 
       // Atualizar lista de aulas
