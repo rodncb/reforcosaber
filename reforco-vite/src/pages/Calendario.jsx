@@ -14,12 +14,12 @@ const Calendario = () => {
 
   // Buscar aulas do Supabase
   useEffect(() => {
-    fetchAulas();
+    fetchAulas().catch(() => setLoading(false));
   }, [mesAtual]);
 
   // Buscar aulas dos próximos 7 dias
   useEffect(() => {
-    fetchAulasProximas();
+    fetchAulasProximas().catch(() => setLoadingProximas(false));
   }, []);
 
   // Função para carregar as aulas do mês selecionado
@@ -31,12 +31,10 @@ const Calendario = () => {
     setErro(null);
 
     try {
-      // Calculando o primeiro e último dia do mês
       const dataInicio = `${ano}-${String(mes).padStart(2, "0")}-01`;
       const ultimoDia = new Date(ano, mes, 0).getDate();
       const dataFim = `${ano}-${String(mes).padStart(2, "0")}-${ultimoDia}`;
 
-      // Fazendo a consulta ao Supabase
       const { data, error } = await supabase
         .from("aulas")
         .select(
@@ -51,11 +49,8 @@ const Calendario = () => {
         .lte("data", dataFim)
         .order("data", { ascending: true });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      // Atualiza o estado com os dados obtidos
       setAulas(data || []);
       setMesAtual(new Date(ano, mes - 1));
     } catch (error) {
@@ -71,18 +66,15 @@ const Calendario = () => {
     setLoadingProximas(true);
 
     try {
-      // Data atual
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
       const dataInicio = hoje.toISOString().split("T")[0];
 
-      // Data daqui a 7 dias
       const proximaSemana = new Date(hoje);
       proximaSemana.setDate(hoje.getDate() + 7);
       proximaSemana.setHours(23, 59, 59, 999);
       const dataFim = proximaSemana.toISOString().split("T")[0];
 
-      // Buscar apenas as aulas dos próximos 7 dias
       const { data, error } = await supabase
         .from("aulas")
         .select(
@@ -97,13 +89,12 @@ const Calendario = () => {
         .lte("data", dataFim)
         .order("data", { ascending: true });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       setAulasProximas(data || []);
     } catch (error) {
-      console.error("Erro ao buscar próximas aulas:", error);
+      setErro(`Erro ao buscar próximas aulas: ${error.message}`);
+      setAulasProximas([]);
     } finally {
       setLoadingProximas(false);
     }

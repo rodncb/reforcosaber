@@ -388,7 +388,7 @@ const Aulas = () => {
                           {aula.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                         <button
                           onClick={() => handleEditar(aula)}
                           className="text-white bg-primary px-3 py-1 rounded-md hover:bg-primary-dark transition-colors"
