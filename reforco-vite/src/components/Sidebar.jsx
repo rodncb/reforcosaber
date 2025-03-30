@@ -8,6 +8,7 @@ import {
   UserIcon,
   CogIcon,
   UserCircleIcon,
+  ChatAlt2Icon,
 } from "@heroicons/react/outline";
 import { authService } from "../services/supabase";
 
@@ -47,6 +48,7 @@ const Sidebar = ({ onLinkClick }) => {
     { path: "/aulas", name: "Aulas", icon: AcademicCapIcon },
     { path: "/calendario", name: "Calendário", icon: CalendarIcon },
     { path: "/usuarios", name: "Usuários", icon: UserIcon },
+    { path: "/assistant", name: "Assistente", icon: ChatAlt2Icon },
   ];
 
   return (

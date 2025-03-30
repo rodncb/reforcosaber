@@ -16,6 +16,7 @@ import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
 import TestSupabase from "./pages/TestSupabase";
 import TestTables from "./pages/TestTables";
+import TeacherAssistant from "./components/TeacherAssistant";
 
 // Componente para rotas protegidas
 const ProtectedRoute = ({ children }) => {
@@ -66,6 +67,7 @@ function App() {
             <Route path="calendario" element={<Calendario />} />
             <Route path="usuarios" element={<Usuarios />} />
             <Route path="perfil" element={<Perfil />} />
+            <Route path="assistant" element={<TeacherAssistant />} />
           </Route>
         </Routes>
       </Router>
