@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { formatarData } from "../utils/formatters";
+import { PencilIcon, TrashIcon } from "@heroicons/react/outline";
 
 const Aulas = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [aulas, setAulas] = useState([]);
   const [alunos, setAlunos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -197,9 +199,14 @@ const Aulas = () => {
     try {
       setLoading(true);
 
+      // Validação do ID do aluno
+      if (!formData.aluno_id || formData.aluno_id === "") {
+        throw new Error("Por favor, selecione um aluno");
+      }
+
       // Formatação e preparação dos dados para o Supabase
       const dadosAula = {
-        aluno_id: Number(formData.aluno_id),
+        aluno_id: parseInt(formData.aluno_id, 10),
         data: formData.data,
         horario: formData.horario,
         duracao: formData.duracao,
@@ -207,6 +214,11 @@ const Aulas = () => {
         status: formData.status,
         observacoes: formData.observacoes,
       };
+
+      // Validação adicional
+      if (isNaN(dadosAula.aluno_id)) {
+        throw new Error("ID do aluno inválido");
+      }
 
       let error;
 
@@ -285,7 +297,15 @@ const Aulas = () => {
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Aulas</h1>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate("/")}
+            className="bg-gray-100 text-gray-600 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
+          >
+            Voltar
+          </button>
+          <h1 className="text-2xl font-bold">Aulas</h1>
+        </div>
         <button
           onClick={() => setShowModal(true)}
           className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors"
@@ -603,6 +623,60 @@ const Aulas = () => {
           </div>
         </div>
       )}
+
+      {/* Cards para telas menores */}
+      <div className="md:hidden">
+        {aulas.length > 0 ? (
+          <div className="divide-y divide-gray-200">
+            {aulas.map((aula) => (
+              <div key={aula.id} className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {aula.alunos?.nome || "Aluno não encontrado"}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {formatarData(aula.data)} - {aula.horario}
+                    </p>
+                  </div>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                      aula.status
+                    )}`}
+                  >
+                    {aula.status}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p>Duração: {aula.duracao}</p>
+                  <p>Matéria: {aula.materia}</p>
+                  {aula.observacoes && <p>Observações: {aula.observacoes}</p>}
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={() => handleEditar(aula)}
+                    className="flex-1 text-white bg-primary py-2 rounded-md hover:bg-primary-dark transition-colors flex items-center justify-center gap-1"
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                    <span className="text-sm">Editar</span>
+                  </button>
+                  <button
+                    onClick={() => handleExcluir(aula.id)}
+                    className="flex-1 text-white bg-secondary py-2 rounded-md hover:bg-secondary-dark transition-colors flex items-center justify-center gap-1"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                    <span className="text-sm">Cancelar</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="p-4 text-center text-gray-500">
+            Nenhuma aula encontrada
+          </p>
+        )}
+      </div>
     </div>
   );
 };
