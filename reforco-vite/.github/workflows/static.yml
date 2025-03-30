@@ -1,0 +1,8 @@
+      - name: Build
+        run: |
+          cd reforco-vite
+          npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          VITE_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

@@ -39,7 +39,7 @@ const Dashboard = () => {
       const { count: aulasRealizadas, error: erroRealizadas } = await supabase
         .from("aulas")
         .select("*", { count: "exact", head: true })
-        .eq("status", "Concluída");
+        .eq("status", "Realizada"); // Alterado para match exato com o banco
 
       if (erroAlunos || erroAulas || erroPendentes || erroRealizadas) {
         setErro("Erro ao buscar estatísticas.");

@@ -1,0 +1,7 @@
+# Configuração do projeto Supabase
+project_id = "wmorozzczawgbgzvpaby"
+
+[api]
+# Configurações específicas da API, se necessário
+enabled = true
+port = 54321
