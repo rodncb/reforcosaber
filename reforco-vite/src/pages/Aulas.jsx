@@ -2,7 +2,12 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { useLocation, useNavigate } from "react-router-dom";
 import { formatarData } from "../utils/formatters";
-import { PencilIcon, TrashIcon, XIcon } from "@heroicons/react/outline";
+import {
+  PencilIcon,
+  TrashIcon,
+  XIcon,
+  CheckIcon,
+} from "@heroicons/react/outline";
 
 const Aulas = () => {
   const location = useLocation();
@@ -278,6 +283,25 @@ const Aulas = () => {
     }
   };
 
+  const handleRealizada = async (aula) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from("aulas")
+        .update({ status: "Concluída" })
+        .eq("id", aula.id);
+
+      if (error) throw error;
+
+      fetchAulas();
+    } catch (error) {
+      setErro(`Erro ao marcar aula como realizada: ${error.message}`);
+      alert("Erro ao marcar aula como realizada. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getMateriasDoAluno = (alunoId) => {
     const aluno = alunos.find((a) => a.id.toString() === alunoId);
 
@@ -388,7 +412,7 @@ const Aulas = () => {
                           {aula.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         <button
                           onClick={() => handleEditar(aula)}
                           className="text-white bg-primary px-3 py-1 rounded-md hover:bg-primary-dark transition-colors"
@@ -401,12 +425,22 @@ const Aulas = () => {
                         >
                           Excluir
                         </button>
-                        <button
-                          onClick={() => handleCancelar(aula)}
-                          className="text-white bg-secondary px-3 py-1 rounded-md hover:bg-secondary-dark transition-colors"
-                        >
-                          Cancelar
-                        </button>
+                        {aula.status === "Agendada" && (
+                          <>
+                            <button
+                              onClick={() => handleRealizada(aula)}
+                              className="text-white bg-green-600 px-3 py-1 rounded-md hover:bg-green-700 transition-colors"
+                            >
+                              Realizada
+                            </button>
+                            <button
+                              onClick={() => handleCancelar(aula)}
+                              className="text-white bg-secondary px-3 py-1 rounded-md hover:bg-secondary-dark transition-colors"
+                            >
+                              Cancelar
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -670,13 +704,24 @@ const Aulas = () => {
                     <TrashIcon className="h-4 w-4" />
                     <span className="text-sm">Excluir</span>
                   </button>
-                  <button
-                    onClick={() => handleCancelar(aula)}
-                    className="flex-1 text-white bg-secondary py-2 rounded-md hover:bg-secondary-dark transition-colors flex items-center justify-center gap-1"
-                  >
-                    <XIcon className="h-4 w-4" />
-                    <span className="text-sm">Cancelar</span>
-                  </button>
+                  {aula.status === "Agendada" && (
+                    <>
+                      <button
+                        onClick={() => handleRealizada(aula)}
+                        className="flex-1 text-white bg-green-600 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center gap-1"
+                      >
+                        <CheckIcon className="h-4 w-4" />
+                        <span className="text-sm">Realizada</span>
+                      </button>
+                      <button
+                        onClick={() => handleCancelar(aula)}
+                        className="flex-1 text-white bg-secondary py-2 rounded-md hover:bg-secondary-dark transition-colors flex items-center justify-center gap-1"
+                      >
+                        <XIcon className="h-4 w-4" />
+                        <span className="text-sm">Cancelar</span>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}

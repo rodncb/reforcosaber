@@ -14,12 +14,12 @@ const Calendario = () => {
 
   // Buscar aulas do Supabase
   useEffect(() => {
-    fetchAulas().catch(() => setLoading(false));
+    fetchAulas();
   }, [mesAtual]);
 
   // Buscar aulas dos próximos 7 dias
   useEffect(() => {
-    fetchAulasProximas().catch(() => setLoadingProximas(false));
+    fetchAulasProximas();
   }, []);
 
   // Função para carregar as aulas do mês selecionado
@@ -27,32 +27,25 @@ const Calendario = () => {
     mes = mesAtual.getMonth() + 1,
     ano = mesAtual.getFullYear()
   ) => {
-    setLoading(true);
-    setErro(null);
-
     try {
+      setLoading(true);
+      setErro(null);
+
       const dataInicio = `${ano}-${String(mes).padStart(2, "0")}-01`;
       const ultimoDia = new Date(ano, mes, 0).getDate();
       const dataFim = `${ano}-${String(mes).padStart(2, "0")}-${ultimoDia}`;
 
-      const { data, error } = await supabase
+      let { data: aulasData, error } = await supabase
         .from("aulas")
-        .select(
-          `
-          *,
-          alunos (
-            nome
-          )
-        `
-        )
+        .select("*, alunos(nome)")
         .gte("data", dataInicio)
         .lte("data", dataFim)
         .order("data", { ascending: true });
 
       if (error) throw error;
 
-      setAulas(data || []);
-      setMesAtual(new Date(ano, mes - 1));
+      // Garantir que temos um array, mesmo que vazio
+      setAulas(aulasData || []);
     } catch (error) {
       setErro(`Erro ao carregar aulas: ${error.message}`);
       setAulas([]);
@@ -63,37 +56,29 @@ const Calendario = () => {
 
   // Função para buscar especificamente as aulas dos próximos 7 dias
   const fetchAulasProximas = async () => {
-    setLoadingProximas(true);
-
     try {
+      setLoadingProximas(true);
+      setErro(null);
+
       const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
       const dataInicio = hoje.toISOString().split("T")[0];
 
       const proximaSemana = new Date(hoje);
       proximaSemana.setDate(hoje.getDate() + 7);
-      proximaSemana.setHours(23, 59, 59, 999);
       const dataFim = proximaSemana.toISOString().split("T")[0];
 
-      const { data, error } = await supabase
+      let { data: aulasData, error } = await supabase
         .from("aulas")
-        .select(
-          `
-          *,
-          alunos (
-            nome
-          )
-        `
-        )
+        .select("*, alunos(nome)")
         .gte("data", dataInicio)
         .lte("data", dataFim)
         .order("data", { ascending: true });
 
       if (error) throw error;
 
-      setAulasProximas(data || []);
+      setAulasProximas(aulasData || []);
     } catch (error) {
-      setErro(`Erro ao buscar próximas aulas: ${error.message}`);
+      setErro(`Erro ao carregar próximas aulas: ${error.message}`);
       setAulasProximas([]);
     } finally {
       setLoadingProximas(false);
@@ -240,9 +225,19 @@ const Calendario = () => {
         </div>
       )}
 
-      {loading && !aulas.length ? (
+      {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      ) : erro ? (
+        <div className="text-red-600 text-center p-4">
+          {erro}
+          <button
+            onClick={fetchAulas}
+            className="ml-2 text-primary hover:underline"
+          >
+            Tentar novamente
+          </button>
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
