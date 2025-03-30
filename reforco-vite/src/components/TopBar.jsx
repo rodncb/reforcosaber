@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BellIcon,
   SearchIcon,
@@ -11,6 +11,19 @@ import { useAuth } from "../contexts/AuthContext";
 const TopBar = ({ toggleSidebar }) => {
   const { signOut, user } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [userName, setUserName] = useState("Usuário");
+  const [userRole, setUserRole] = useState("Usuário");
+
+  useEffect(() => {
+    if (user) {
+      // Nome do usuário: tenta metadados, depois email, depois default
+      const emailPrefix = user.email ? user.email.split("@")[0] : "";
+      setUserName(user.user_metadata?.nome || emailPrefix || "Usuário");
+
+      // Cargo do usuário
+      setUserRole(user.user_metadata?.cargo || "Usuário");
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -19,12 +32,6 @@ const TopBar = ({ toggleSidebar }) => {
       // Erro tratado silenciosamente
     }
   };
-
-  // Extrair nome e cargo do usuário
-  const userEmail = user?.email || "";
-  const userName =
-    user?.user_metadata?.nome || userEmail.split("@")[0] || "Usuário";
-  const userRole = user?.user_metadata?.cargo || "Usuário";
 
   return (
     <div className="bg-white h-16 px-6 flex items-center justify-between border-b shadow-sm">

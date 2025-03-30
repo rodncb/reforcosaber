@@ -204,18 +204,12 @@ const Aulas = () => {
         throw new Error("Por favor, selecione um aluno");
       }
 
-      // Garantir que aluno_id seja um número válido
-      const alunoId = parseInt(formData.aluno_id, 10);
-
-      if (isNaN(alunoId) || alunoId <= 0) {
-        throw new Error(
-          "ID do aluno inválido. Por favor, selecione um aluno válido."
-        );
-      }
+      // Remover a conversão para número, pois o ID é UUID
+      const alunoId = formData.aluno_id;
 
       // Montar objeto com dados da aula
       const dadosAula = {
-        aluno_id: alunoId,
+        aluno_id: alunoId, // Usar o UUID diretamente
         data: formData.data,
         horario: formData.horario,
         duracao: formData.duracao,
@@ -228,13 +222,11 @@ const Aulas = () => {
       let resultado;
 
       if (aulaEditando) {
-        // Edição de aula existente
         resultado = await supabase
           .from("aulas")
           .update(dadosAula)
           .eq("id", aulaEditando.id);
       } else {
-        // Inserção de nova aula
         resultado = await supabase.from("aulas").insert(dadosAula);
       }
 
