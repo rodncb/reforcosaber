@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { useLocation, useNavigate } from "react-router-dom";
 import { formatarData } from "../utils/formatters";
-import { PencilIcon, TrashIcon } from "@heroicons/react/outline";
+import { PencilIcon, TrashIcon, XIcon } from "@heroicons/react/outline";
 
 const Aulas = () => {
   const location = useLocation();
@@ -252,7 +252,11 @@ const Aulas = () => {
   };
 
   const handleExcluir = async (id) => {
-    if (window.confirm("Tem certeza que deseja excluir esta aula?")) {
+    if (
+      window.confirm(
+        "Tem certeza que deseja excluir esta aula? Esta ação não pode ser desfeita."
+      )
+    ) {
       setErro(null);
       try {
         setLoading(true);
@@ -393,6 +397,12 @@ const Aulas = () => {
                         </button>
                         <button
                           onClick={() => handleExcluir(aula.id)}
+                          className="text-white bg-red-600 px-3 py-1 rounded-md hover:bg-red-700 transition-colors"
+                        >
+                          Excluir
+                        </button>
+                        <button
+                          onClick={() => handleCancelar(aula)}
                           className="text-white bg-secondary px-3 py-1 rounded-md hover:bg-secondary-dark transition-colors"
                         >
                           Cancelar
@@ -655,9 +665,16 @@ const Aulas = () => {
                   </button>
                   <button
                     onClick={() => handleExcluir(aula.id)}
-                    className="flex-1 text-white bg-secondary py-2 rounded-md hover:bg-secondary-dark transition-colors flex items-center justify-center gap-1"
+                    className="flex-1 text-white bg-red-600 py-2 rounded-md hover:bg-red-700 transition-colors flex items-center justify-center gap-1"
                   >
                     <TrashIcon className="h-4 w-4" />
+                    <span className="text-sm">Excluir</span>
+                  </button>
+                  <button
+                    onClick={() => handleCancelar(aula)}
+                    className="flex-1 text-white bg-secondary py-2 rounded-md hover:bg-secondary-dark transition-colors flex items-center justify-center gap-1"
+                  >
+                    <XIcon className="h-4 w-4" />
                     <span className="text-sm">Cancelar</span>
                   </button>
                 </div>
