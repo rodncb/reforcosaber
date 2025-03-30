@@ -4,6 +4,7 @@ import {
   SearchIcon,
   MenuIcon,
   LogoutIcon,
+  UserCircleIcon,
 } from "@heroicons/react/outline";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -18,6 +19,12 @@ const TopBar = ({ toggleSidebar }) => {
       // Erro tratado silenciosamente
     }
   };
+
+  // Extrair nome e cargo do usuário
+  const userEmail = user?.email || "";
+  const userName =
+    user?.user_metadata?.nome || userEmail.split("@")[0] || "Usuário";
+  const userRole = user?.user_metadata?.cargo || "Usuário";
 
   return (
     <div className="bg-white h-16 px-6 flex items-center justify-between border-b shadow-sm">
@@ -55,14 +62,10 @@ const TopBar = ({ toggleSidebar }) => {
 
         {/* Perfil do usuário */}
         <div className="flex items-center space-x-3 relative">
-          <img
-            src="https://i.pravatar.cc/150?img=8"
-            alt="Avatar"
-            className="w-8 h-8 rounded-full object-cover border-2 border-primary"
-          />
+          <UserCircleIcon className="w-8 h-8 text-gray-500" />
           <div className="hidden md:block">
-            <p className="text-sm font-medium">{user?.email || "Usuário"}</p>
-            <p className="text-xs text-gray-500">Professor</p>
+            <p className="text-sm font-medium">{userName}</p>
+            <p className="text-xs text-gray-500">{userRole}</p>
           </div>
 
           {/* Botão de Logout */}
