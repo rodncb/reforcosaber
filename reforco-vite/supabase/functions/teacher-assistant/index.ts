@@ -13,45 +13,52 @@ serve(async (req) => {
   }
 
   try {
-    const { message, context } = await req.json();
+    const { message, context, messageHistory = [] } = await req.json();
     const openAiKey = Deno.env.get("OPENAI_API_KEY");
+
+    // Construir o histórico de mensagens
+    const messages = [
+      {
+        role: "system",
+        content: `Você é um assistente especializado para professores do Reforço do Saber, com duas funções principais:
+
+                 1. ASSISTENTE DA APLICAÇÃO
+                 - Auxilia na gestão de alunos e aulas
+                 - Analisa dados e progresso dos estudantes
+                 - Fornece insights sobre o desempenho geral
+                 - Ajuda com agendamentos e organização
+
+                 2. ASSISTENTE PEDAGÓGICO
+                 - Auxilia no planejamento de aulas
+                 - Sugere metodologias de ensino
+                 - Fornece ideias para atividades e exercícios
+                 - Ajuda a criar material didático personalizado
+                 - Oferece dicas para lidar com dificuldades específicas dos alunos
+                 - Sugere recursos educacionais e ferramentas de ensino
+
+                 Ao responder:
+                 - Seja prático e objetivo
+                 - Forneça exemplos concretos
+                 - Adapte as sugestões ao contexto do reforço escolar
+                 - Considere as diferentes faixas etárias e níveis de ensino
+                 - Mantenha o foco no desenvolvimento individual do aluno`,
+      },
+      // Adiciona o histórico de mensagens anteriores
+      ...messageHistory,
+      // Adiciona a mensagem atual do usuário
+      { role: "user", content: message },
+    ];
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${openAiKey}`,
         "Content-Type": "application/json",
+        "Accept-Charset": "utf-8",
       },
       body: JSON.stringify({
         model: "gpt-4-1106-preview",
-        messages: [
-          {
-            role: "system",
-            content: `Você é um assistente especializado para professores do Reforço do Saber, com duas funções principais:
-
-                     1. ASSISTENTE DA APLICAÇÃO
-                     - Auxilia na gestão de alunos e aulas
-                     - Analisa dados e progresso dos estudantes
-                     - Fornece insights sobre o desempenho geral
-                     - Ajuda com agendamentos e organização
-
-                     2. ASSISTENTE PEDAGÓGICO
-                     - Auxilia no planejamento de aulas
-                     - Sugere metodologias de ensino
-                     - Fornece ideias para atividades e exercícios
-                     - Ajuda a criar material didático personalizado
-                     - Oferece dicas para lidar com dificuldades específicas dos alunos
-                     - Sugere recursos educacionais e ferramentas de ensino
-
-                     Ao responder:
-                     - Seja prático e objetivo
-                     - Forneça exemplos concretos
-                     - Adapte as sugestões ao contexto do reforço escolar
-                     - Considere as diferentes faixas etárias e níveis de ensino
-                     - Mantenha o foco no desenvolvimento individual do aluno`,
-          },
-          { role: "user", content: message },
-        ],
+        messages,
         functions: [
           {
             name: "provide_teaching_assistance",
@@ -97,12 +104,18 @@ serve(async (req) => {
     const result = JSON.parse(data.choices[0].message.function_call.arguments);
 
     return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json; charset=utf-8",
+      },
       status: 200,
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json; charset=utf-8",
+      },
       status: 500,
     });
   }
